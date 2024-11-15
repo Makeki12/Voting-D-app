@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voting DApp</title>
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.36/dist/web3.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #app {
+            width: 400px;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+        h2 {
+            text-align: center;
+        }
+        input[type="text"], input[type="address"] {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h2>Voting DApp</h2>
+        
+        <!-- Add Candidate -->
+        <input type="text" id="candidateName" placeholder="Enter Candidate's Name" />
+        <button onclick="addCandidate()">Add Candidate</button>
+
+        <!-- Voter Address and Vote Button -->
+        <input type="text" id="voterAddress" placeholder="Enter Your Address" />
+        <button onclick="vote()">Vote</button>
+
+        <!-- Display Result -->
+        <div id="status"></div>
+    </div>
+
+    <script>
+        let web3;
+        let contract;
+        
+        // Smart contract ABI and address (replace with your actual values)
+        const abi = [
+            /* Your Contract ABI goes here */
+        ];
+        const contractAddress = 'YOUR_CONTRACT_ADDRESS';
+
+        // Initialize web3 and the contract
+        window.onload = async () => {
+            if (window.ethereum) {
+                try {
+                    await ethereum.request({ method: 'eth_requestAccounts' });
+                    web3 = new Web3(window.ethereum);
+                    contract = new web3.eth.Contract(abi, contractAddress);
+                } catch (error) {
+                    document.getElementById("status").innerText = "Please allow MetaMask to access the DApp";
+                    console.error("User denied account access", error);
+                }
+            } else {
+                document.getElementById("status").innerText = "Please install MetaMask!";
+            }
+        };
+
+        // Add candidate function
+        async function addCandidate() {
+            const candidateName = document.getElementById('candidateName').value;
+            if (candidateName === "") {
+                alert("Please enter a candidate's name.");
+                return;
+            }
+
+            try {
+                const accounts = await web3.eth.getAccounts();
+                await contract.methods.addCandidate(candidateName).send({ from: accounts[0] });
+                document.getElementById("status").innerText = `Candidate ${candidateName} added successfully!`;
+            } catch (error) {
+                console.error("Error adding candidate:", error);
+                document.getElementById("status").innerText = "Error adding candidate.";
+            }
+        }
+
+        // Vote function
+        async function vote() {
+            const voterAddress = document.getElementById('voterAddress').value;
+            const candidateName = document.getElementById('candidateName').value;
+            if (voterAddress === "" || candidateName === "") {
+                alert("Please enter both your address and the candidate's name.");
+                return;
+            }
+
+            try {
+                await contract.methods.vote(candidateName).send({ from: voterAddress });
+                document.getElementById("status").innerText = `Vote for ${candidateName} has been cast!`;
+            } catch (error) {
+                console.error("Error voting:", error);
+                document.getElementById("status").innerText = "Error casting vote.";
+            }
+        }
+    </script>
+</body>
+</html>
+
+
